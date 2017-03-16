@@ -188,15 +188,31 @@ RCT_EXPORT_METHOD(logout) {
 }
 
 
+- (BOOL)isValidUrl:(NSString*)imageFilePath
+{
+    NSString *regex =@"[a-zA-z]+://[^\\s]*";
+    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@",regex];
+    return [urlTest evaluateWithObject:imageFilePath];
+}
+
 - (UIImage*)getResourceImage:(NSString*)imageFilePath
 {
-    NSString *localImagePath = [imageFilePath substringFromIndex:1];
-    NSMutableString *bundlePath = [NSBundle mainBundle].bundlePath;
-    bundlePath = [[bundlePath stringByAppendingPathComponent:@"assets"] stringByAppendingPathComponent:localImagePath];
     
-    UIImage *image = [[UIImage imageWithContentsOfFile:bundlePath] resizableImageWithCapInsets:UIEdgeInsetsMake(15,15,30,30) resizingMode:UIImageResizingModeStretch];
-    if (image) {
-        return image;
+    if ([self isValidUrl:imageFilePath]) {
+        NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:imageFilePath]];
+        UIImage *image = [UIImage imageWithData:data];
+        if (image) {
+            return image;
+        }
+    } else {
+        NSString *localImagePath = [imageFilePath substringFromIndex:1];
+        NSMutableString *bundlePath = [NSBundle mainBundle].bundlePath;
+        bundlePath = [[bundlePath stringByAppendingPathComponent:@"assets"] stringByAppendingPathComponent:localImagePath];
+        
+        UIImage *image = [[UIImage imageWithContentsOfFile:bundlePath] resizableImageWithCapInsets:UIEdgeInsetsMake(15,15,30,30) resizingMode:UIImageResizingModeStretch];
+        if (image) {
+            return image;
+        }
     }
     
     return nil;
